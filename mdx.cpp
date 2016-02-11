@@ -9,6 +9,8 @@
 
 using namespace std;
 
+#define ALL_GEOSETS -1
+
 typedef struct {
     uint32_t id;
     uint32_t size;
@@ -36,6 +38,30 @@ void print_id(uint32_t id) {
     strncpy(id_str, (char *) &id, 4);
     id_str[4] = '\0';
 //    cout << id_str << endl;
+}
+
+void print_vertex(Vector3 vertex) {
+    cout << "v ";
+
+    cout << vertex.x;
+    cout << " ";
+    cout << vertex.y;
+    cout << " ";
+    cout << vertex.z;
+
+    cout << endl;
+}
+
+void print_face(Face face, int face_base) {
+    cout << "f ";
+
+    cout << face.a + face_base;
+    cout << " ";
+    cout << face.b + face_base;
+    cout << " ";
+    cout << face.c + face_base;
+
+    cout << endl;
 }
 
 int main(int argc, char *argv[]) {
@@ -69,7 +95,7 @@ int main(int argc, char *argv[]) {
     int i = 0;
     Chunk chunk;
     Set vrtx, nrms, ptyp, pcnt, pvtx, gndx, mtgc, mats;
-    Vector3* vertex, * normals;
+    Vector3* vertices, * normals;
     uint32_t* face_types, * face_groups, *MatrixGroupSize, *MatrixIndex;
     Face* faces;
     uint8_t* matrix_groups;
@@ -80,7 +106,9 @@ int main(int argc, char *argv[]) {
     
     int face_base = 1;
 
-
+//    int selected_geoset = ALL_GEOSETS;
+    int selected_geoset = 4;
+    int index_geoset = 0;
     while (fs.read((char *) &chunk, sizeof (Chunk))) {
         print_id(chunk.id);
         //        cout << chunk.size << endl;
@@ -89,6 +117,7 @@ int main(int argc, char *argv[]) {
         if (chunk.id == 0x534f4547) {//GEOS
 
             while (byte_read != chunk.size) {
+                index_geoset++;
 
                 uint32_t inclusive_size;
 
@@ -105,25 +134,19 @@ int main(int argc, char *argv[]) {
                 //            cout << "  ";
                 print_id(vrtx.id);
 
-                vertex = (Vector3 *) malloc(sizeof (Vector3) * vrtx.size_i);
+                vertices = (Vector3 *) malloc(sizeof (Vector3) * vrtx.size_i);
 
-                fs.read((char *) vertex, sizeof (Vector3) * vrtx.size_i);
+                fs.read((char *) vertices, sizeof (Vector3) * vrtx.size_i);
                 byte_read += sizeof (Vector3) * vrtx.size_i;
 
                 for (i = 0; i < vrtx.size_i; i++) {
-                    cout << "v ";
-
-                    cout << vertex[i].x;
-                    cout << " ";
-                    cout << vertex[i].y;
-                    cout << " ";
-                    cout << vertex[i].z;
-
-                    cout << endl;
+                    if (selected_geoset == ALL_GEOSETS || index_geoset == selected_geoset) {
+                        print_vertex(vertices[i]);
+                    }
                 }
 
 
-                free(vertex);
+                free(vertices);
 
 
                 ///////////////////// NRMS
@@ -189,18 +212,14 @@ int main(int argc, char *argv[]) {
 
 
                 for (i = 0; i < (pvtx.size_i / 3); i++) {
-                    cout << "f ";
-
-                    cout << faces[i].a + face_base;
-                    cout << " ";
-                    cout << faces[i].b + face_base;
-                    cout << " ";
-                    cout << faces[i].c + face_base;
-
-                    cout << endl;
+                    if (selected_geoset == ALL_GEOSETS || index_geoset == selected_geoset) {
+                        print_face(faces[i], face_base);
+                    }
                 }
-                
-                face_base += vrtx.size_i;
+
+                if (selected_geoset == ALL_GEOSETS) {
+                    face_base += vrtx.size_i;
+                }
 
                 free(faces);
 
@@ -288,7 +307,8 @@ int main(int argc, char *argv[]) {
 
         fs.seekg(chunk.size - byte_read, ios_base::cur);
     }
-
+    
+//    cout << "There was " << index_geoset << " geosets." << endl;
 
     fs.close();
 
