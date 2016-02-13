@@ -18,7 +18,7 @@ void print_id(uint32_t id) {
     char id_str[5];
     strncpy(id_str, (char *) &id, 4);
     id_str[4] = '\0';
-//    std::cout << id_str << endl;
+    std::cout << id_str << std::endl;
 }
 
 bool Mdx::load(const std::string& filename) {
@@ -55,6 +55,8 @@ bool Mdx::load(const std::string& filename) {
     
 
     fs.close();
+    
+    return true;
 }
 
 void Mdx::output_obj(int selected_geoset) {
@@ -96,4 +98,10 @@ void Mdx::output_obj(int selected_geoset) {
             face_base += geosets[i].vertices.size();
         }
     }
+}
+
+void Mdx::output_gl(int selected_geoset, std::vector<glm::vec3> &vertices, std::vector<glm::vec3> &normals, std::vector<GLushort> &elements) {
+    vertices = geosets[selected_geoset].vertices;
+    elements = geosets[selected_geoset].faces;
+    normals = geosets[selected_geoset].normals;
 }

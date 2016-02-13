@@ -6,7 +6,7 @@
 CC = g++
 
 # flags to pass compiler
-CFLAGS =
+CFLAGS = -g
 
 # name for executable
 EXE = mdx
@@ -16,7 +16,7 @@ HDRS = mdx.h geosets.h geoset.h
 
 # space-separated list of libraries, if any,
 # each of which should be prefixed with -l
-LIBS =
+LIBS = -lSDL2 -lGLEW -lGL -lSDL2_image
 
 # space-separated list of source files
 SRCS = main.cpp mdx.cpp geosets.cpp geoset.cpp

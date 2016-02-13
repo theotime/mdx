@@ -8,7 +8,10 @@
 #ifndef MDX_H
 #define MDX_H
 
+#include <GL/glew.h>
+
 #include <string>
+#include <vector>
 
 #include <stdint.h>
 
@@ -30,6 +33,7 @@ public:
     bool load(const std::string& filename);
     
     void output_obj(int selected_geoset);
+    void output_gl(int selected_geoset, std::vector<glm::vec3> &vertices, std::vector<glm::vec3> &normals, std::vector<GLushort> &elements);
     
 private:
     std::string filename;
