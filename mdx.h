@@ -33,7 +33,7 @@ public:
     bool load(const std::string& filename);
     
     void output_obj(int selected_geoset);
-    void output_gl(int selected_geoset, std::vector<glm::vec3> &vertices, std::vector<glm::vec3> &normals, std::vector<GLushort> &elements);
+    void output_gl(int selected_geoset, std::vector<glm::vec3> &vertices, std::vector<glm::vec3> &normals, std::vector<glm::vec2> &uv, std::vector<GLushort> &elements);
     
 private:
     std::string filename;

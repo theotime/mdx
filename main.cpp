@@ -25,14 +25,14 @@
 
 
 /* GLOBAL VARIABLES */
-GLuint program;
-GLint attribute_coord3d;
-GLint attribute_normal;
-GLint uniform_mv;
-GLint uniform_mv_normal;
-GLint uniform_p;
+GLuint program, texture_id;
+GLint uniform_texture;
 
-GLuint vbo_mesh_vertices, vbo_mesh_normals;
+GLint attribute_coord3d;
+GLint attribute_tex2d;
+GLint uniform_mvp;
+
+GLuint vbo_mesh_vertices, vbo_mesh_texture;
 GLuint ibo_mesh_elements;
 
 int screen_width=800, screen_height=600;
@@ -91,7 +91,7 @@ GLuint create_shader(std::string filename, GLenum type) {
 #ifdef GL_ES_VERSION_2_0
         "#version 100\n" // OpenGL ES 2.0
 #else
-        "#version 130\n"
+        "#version 120\n"
 #endif
         ,
         source.c_str()
@@ -112,21 +112,42 @@ GLuint create_shader(std::string filename, GLenum type) {
     return res;
 }
 
-bool init_resources(Mdx& mdx) {
+bool init_resources(Mdx& mdx, const std::string& texture_path) {
+
+    SDL_Surface* res_texture = IMG_Load(texture_path.c_str());
+    if (res_texture == NULL) {
+        std::cerr << "IMG_Load: " << SDL_GetError() << std::endl;
+        return false;
+    }
+    glGenTextures(1, &texture_id);
+    glBindTexture(GL_TEXTURE_2D, texture_id);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexImage2D(GL_TEXTURE_2D,
+            0,
+            GL_RGB,
+            res_texture->w,
+            res_texture->h,
+            0,
+            GL_RGB,
+            GL_UNSIGNED_BYTE,
+            res_texture->pixels
+            );
+    SDL_FreeSurface(res_texture);
 
     std::vector<glm::vec3> vertices;
-    std::vector<glm::vec3> normals;
+    std::vector<glm::vec3> normals;//just ignore for now
     std::vector<GLushort> elements;
+    std::vector<glm::vec2> uv;
 
-    mdx.output_gl(0, vertices, normals, elements);
+    mdx.output_gl(0, vertices, normals, uv, elements);
 
     glGenBuffers(1, &vbo_mesh_vertices);
     glBindBuffer(GL_ARRAY_BUFFER, vbo_mesh_vertices);
     glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(glm::vec3), &vertices[0], GL_STATIC_DRAW);
     
-    glGenBuffers(1, &vbo_mesh_normals);
-    glBindBuffer(GL_ARRAY_BUFFER, vbo_mesh_normals);
-    glBufferData(GL_ARRAY_BUFFER, normals.size() * sizeof(glm::vec3), &normals[0], GL_STATIC_DRAW);
+    glGenBuffers(1, &vbo_mesh_texture);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo_mesh_texture);
+    glBufferData(GL_ARRAY_BUFFER, uv.size() * sizeof(glm::vec2), &uv[0], GL_STATIC_DRAW);
 
     glGenBuffers(1, &ibo_mesh_elements);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo_mesh_elements);
@@ -155,33 +176,21 @@ bool init_resources(Mdx& mdx) {
         return false;
     }
     
-    uniform_mv = glGetUniformLocation(program, "mv");
-    if(uniform_mv == -1) {
-        std::cerr << "Couldn't bind uniform_fade " << "mv" << std::endl;
+    uniform_mvp = glGetUniformLocation(program, "mvp");
+    if(uniform_mvp == -1) {
+        std::cerr << "Couldn't bind uniform_fade " << "mvp" << std::endl;
         return false;
     }
    
-    uniform_mv_normal = glGetUniformLocation(program,  "mv_normal");
-    if(uniform_mv_normal == -1) {
-        std::cerr << "Couldn't bind uniform_fade " <<  "mv_normal" << std::endl;
-        return false;
-    }
-    
-    uniform_p = glGetUniformLocation(program,  "p");
-    if(uniform_p == -1) {
-        std::cerr << "Couldn't bind uniform_fade " <<  "p" << std::endl;
-        return false;
-    }
-    
     attribute_coord3d = glGetAttribLocation(program, "coord3d");
     if(attribute_coord3d == -1) {
         std::cerr << "Couldn't bind attribute " << "coord3d" << std::endl;
         return false;
     }
     
-    attribute_normal = glGetAttribLocation(program, "normal");
-    if(attribute_normal == -1) {
-        std::cerr << "Couldn't bind attribute " << "normal" << std::endl;
+    attribute_tex2d = glGetAttribLocation(program, "tex2d");
+    if(attribute_tex2d == -1) {
+        std::cerr << "Couldn't bind attribute " << "tex2d" << std::endl;
         return false;
     }
     
@@ -196,6 +205,9 @@ void render(SDL_Window* window) {
 
     glUseProgram(program);
 
+    glActiveTexture(GL_TEXTURE0);
+    glUniform1i(uniform_texture, /*GL_TEXTURE*/0);
+    glBindTexture(GL_TEXTURE_2D, texture_id);
 
     glBindBuffer(GL_ARRAY_BUFFER, vbo_mesh_vertices);
     glEnableVertexAttribArray(attribute_coord3d);
@@ -208,11 +220,11 @@ void render(SDL_Window* window) {
             0
             );
     
-    glBindBuffer(GL_ARRAY_BUFFER, vbo_mesh_normals);
-    glEnableVertexAttribArray(attribute_normal);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo_mesh_texture);
+    glEnableVertexAttribArray(attribute_tex2d);
     glVertexAttribPointer(
-            attribute_normal,
-            3,
+            attribute_tex2d,
+            2,
             GL_FLOAT,
             GL_FALSE,
             0,
@@ -226,7 +238,7 @@ void render(SDL_Window* window) {
     glDrawElements(GL_TRIANGLES, size / sizeof (GLushort), GL_UNSIGNED_SHORT, 0);
 
     glDisableVertexAttribArray(attribute_coord3d);
-    glDisableVertexAttribArray(attribute_normal);
+    glDisableVertexAttribArray(attribute_tex2d);
     
     SDL_GL_SwapWindow(window);
     
@@ -235,29 +247,24 @@ void render(SDL_Window* window) {
 void free_resources() {
     glDeleteProgram(program);
     glDeleteBuffers(1, &vbo_mesh_vertices);
-    glDeleteBuffers(1, &vbo_mesh_normals);
+    glDeleteBuffers(1, &vbo_mesh_texture);
     glDeleteBuffers(1, &ibo_mesh_elements);
+    glDeleteTextures(1, &texture_id);
 }
 
 void logic() {
-
     float angle = SDL_GetTicks() / 50.0; 
     glm::vec3 axis_y(0, 1, 0);
     glm::vec3 axis_x(1, 0, 0);
     glm::mat4 anim = glm::rotate(glm::mat4(1.0f), glm::radians(angle), axis_y);
 
     glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(0.0, -50.0, -150.0))* anim * glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), axis_x);
-    
     glm::mat4 view = glm::lookAt(glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, 0.0, -4.0), glm::vec3(0.0, 1.0, 0.0));
-    
     glm::mat4 projection = glm::perspective(45.0f, 1.0f * screen_width/screen_height, 0.1f, 1000.0f);
     
-    glm::mat4 mv = view * model;
-    glm::mat4 mv_normal = glm::inverse(glm::transpose(mv));
+    glm::mat4 mvp = projection * view * model;
     
-    glUniformMatrix4fv(uniform_mv, 1, GL_FALSE, glm::value_ptr(mv));
-    glUniformMatrix4fv(uniform_mv_normal, 1, GL_FALSE, glm::value_ptr(mv_normal));
-    glUniformMatrix4fv(uniform_p, 1, GL_FALSE, glm::value_ptr(projection));
+    glUniformMatrix4fv(uniform_mvp, 1, GL_FALSE, glm::value_ptr(mvp));
 }
 
 void onResize(int width, int height) {
@@ -283,8 +290,8 @@ void mainLoop(SDL_Window* window) {
 }
 
 int main(int argc, char* argv[]) {
-    if (argc != 2) {
-        std::cout << "Need filename" << std::endl;
+    if (argc != 3) {
+        std::cout << "./mdx filename.mdx filename.png" << std::endl;
         return false;
     }
 
@@ -314,7 +321,7 @@ int main(int argc, char* argv[]) {
         return EXIT_FAILURE;
     }
     
-    if (!init_resources(mdx))
+    if (!init_resources(mdx, argv[2]))
         return EXIT_FAILURE;
 
     mainLoop(window);

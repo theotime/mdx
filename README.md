@@ -1,2 +1,6 @@
 # mdx
-Quick hack to convert raw vertices from .mdx to .obj
+MDX OpenGL
+
+Handle:
+* Mesh loading
+* Texture

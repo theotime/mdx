@@ -147,16 +147,28 @@ size_t Geoset::load(std::ifstream& fs) {
     byte_read += (sizeof (uint32_t) * 7 * size_extents);
 
 
+    ///////////////////// UVAS
+    
     fs.read((char *) &uvas, sizeof ( uvas));
     byte_read += sizeof (uvas);
     print_id(uvas.id);
+    
+    ///////////////////// UVBS
 
     fs.read((char *) &uvbs, sizeof ( uvbs));
     byte_read += sizeof (uvbs);
     print_id(uvbs.id);
 
-    fs.seekg((sizeof (uint32_t) * uvbs.size_i * 2), std::ios_base::cur); //skip multiple stuff // FLOAT2
-    byte_read += (sizeof (uint32_t) * uvbs.size_i * 2);
+    float u,v;
+    glm::vec2 t_vertex;
+    for (i = 0; i < uvbs.size_i; i++) {
+        fs.read((char*) &u, sizeof (float));
+        t_vertex.x = u;
+        fs.read((char*) &v, sizeof (float));
+        t_vertex.y = v;
+        uv.push_back(t_vertex);
+    }
+    byte_read += sizeof (float) * 2 * uvbs.size_i;
 
 
     return byte_read;

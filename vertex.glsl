@@ -1,16 +1,11 @@
-
 attribute vec3 coord3d;
-attribute vec3 normal;
+attribute vec2 tex2d;
 
-smooth out vec3 v;
-smooth out vec3 n;
+varying vec2 f_texcoord;
 
-uniform mat4 mv;
-uniform mat4 p;
+uniform mat4 mvp;
 
 void main(void) {
-    gl_Position = p * mv * vec4(coord3d, 1.0);
-    n = normal;
-    v = coord3d;
-
+  gl_Position = mvp * vec4(coord3d, 1.0);
+  f_texcoord = tex2d;
 }

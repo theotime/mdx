@@ -100,8 +100,9 @@ void Mdx::output_obj(int selected_geoset) {
     }
 }
 
-void Mdx::output_gl(int selected_geoset, std::vector<glm::vec3> &vertices, std::vector<glm::vec3> &normals, std::vector<GLushort> &elements) {
+void Mdx::output_gl(int selected_geoset, std::vector<glm::vec3> &vertices, std::vector<glm::vec3> &normals, std::vector<glm::vec2> &uv, std::vector<GLushort> &elements) {
     vertices = geosets[selected_geoset].vertices;
     elements = geosets[selected_geoset].faces;
     normals = geosets[selected_geoset].normals;
+    uv = geosets[selected_geoset].uv;
 }
