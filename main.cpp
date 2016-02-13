@@ -253,7 +253,7 @@ void free_resources() {
 }
 
 void logic() {
-    float angle = SDL_GetTicks() / 50.0; 
+    float angle = SDL_GetTicks() / 50.0 * 4; 
     glm::vec3 axis_y(0, 1, 0);
     glm::vec3 axis_x(1, 0, 0);
     glm::mat4 anim = glm::rotate(glm::mat4(1.0f), glm::radians(angle), axis_y);
