@@ -12,14 +12,14 @@ CFLAGS =
 EXE = mdx
 
 # space-separated list of header files
-HDRS = 
+HDRS = mdx.h geosets.h geoset.h
 
 # space-separated list of libraries, if any,
 # each of which should be prefixed with -l
 LIBS =
 
 # space-separated list of source files
-SRCS = mdx.cpp
+SRCS = main.cpp mdx.cpp geosets.cpp geoset.cpp
 
 # automatically generated list of object files
 OBJS = $(SRCS:.cpp=.o)
