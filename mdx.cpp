@@ -1,17 +1,14 @@
 // specs : http://www.wc3c.net/tools/specs/NubMdxFormat.txt
 
-#include <cstdlib>
 #include <iostream>
 #include <fstream>
-#include <cstring>
-
-#include <glm/glm.hpp>
-#include <glm/gtc/type_ptr.hpp>
 
 #include <vector>
 #include <map>
 
-#include <stdint.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
 #include <assert.h>
 
 using namespace std;
@@ -46,9 +43,7 @@ private:
 
 size_t Geoset::load(ifstream& fs) {
     Header vrtx, nrms, ptyp, pcnt, pvtx, gndx, mtgc, mats, uvas, uvbs;
-    uint32_t* face_types, * face_groups, *MatrixGroupSize, *MatrixIndex;
-    uint8_t* matrix_groups;
-
+    
     int i = 0;
     size_t byte_read = 0;
 
@@ -110,13 +105,8 @@ size_t Geoset::load(ifstream& fs) {
     //            cout << "  ";
     print_id(ptyp.id);
 
-    face_types = (uint32_t *) malloc(sizeof (uint32_t) * ptyp.size_i);
-
-    fs.read((char *) face_types, sizeof (uint32_t) * ptyp.size_i);
+    fs.seekg(sizeof (uint32_t) * ptyp.size_i, ios_base::cur); // Skip
     byte_read += sizeof (uint32_t) * ptyp.size_i;
-
-    free(face_types);
-
 
     ///////////////////// PCNT
 
@@ -126,12 +116,8 @@ size_t Geoset::load(ifstream& fs) {
     //            cout << "  ";
     print_id(pcnt.id);
 
-    face_groups = (uint32_t *) malloc(sizeof (uint32_t) * pcnt.size_i);
-
-    fs.read((char *) face_groups, sizeof (uint32_t) * pcnt.size_i);
+    fs.seekg(sizeof (uint32_t) * pcnt.size_i, ios_base::cur); // Skip
     byte_read += sizeof (uint32_t) * pcnt.size_i;
-
-    free(face_groups);
 
 
     ///////////////////// PVTX
@@ -158,12 +144,8 @@ size_t Geoset::load(ifstream& fs) {
     //            cout << "  ";
     print_id(gndx.id);
 
-    matrix_groups = (uint8_t *) malloc(sizeof (uint8_t) * gndx.size_i);
-
-    fs.read((char *) matrix_groups, sizeof (uint8_t) * gndx.size_i);
+    fs.seekg(sizeof (uint8_t) * gndx.size_i, ios_base::cur); // Skip
     byte_read += sizeof (uint8_t) * gndx.size_i;
-
-    free(matrix_groups);
 
     ///////////////////// MTGC
 
@@ -173,11 +155,8 @@ size_t Geoset::load(ifstream& fs) {
     //            cout << "  ";
     print_id(mtgc.id);
 
-    MatrixGroupSize = (uint32_t *) malloc(sizeof (uint32_t) * mtgc.size_i);
-
-    fs.read((char *) MatrixGroupSize, sizeof (uint32_t) * mtgc.size_i);
+    fs.seekg(sizeof (uint32_t) * mtgc.size_i, ios_base::cur); // Skip
     byte_read += sizeof (uint32_t) * mtgc.size_i;
-    free(MatrixGroupSize);
 
     ///////////////////// MATS
 
@@ -187,12 +166,8 @@ size_t Geoset::load(ifstream& fs) {
     //            cout << "  ";
     print_id(mats.id);
 
-    MatrixIndex = (uint32_t *) malloc(sizeof (uint32_t) * mats.size_i);
-
-    fs.read((char *) MatrixIndex, sizeof (uint32_t) * mats.size_i);
+    fs.seekg(sizeof (uint32_t) * mats.size_i, ios_base::cur); // Skip
     byte_read += sizeof (uint32_t) * mats.size_i;
-
-    free(MatrixIndex);
 
     fs.seekg((sizeof (uint32_t) * 10), ios_base::cur); //skip multiple stuff
     byte_read += (sizeof (uint32_t) * 10);
@@ -367,7 +342,7 @@ int main(int argc, char *argv[]) {
 
     Mdx mdx;
     mdx.load(argv[1]);
-    mdx.output_obj(2);
+    mdx.output_obj(ALL_GEOSETS);
 
     return true;
 }
